@@ -1,140 +1,111 @@
-<!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-<a id="readme-top"></a>
-<!--
-* Thanks for checking out the Best-README-Template. If you have a suggestion
-* that would make this better, please fork the repo and create a pull request
-* or simply open an issue with the tag "enhancement".
-* Don't forget to give the project a star!
-* Thanks again! Now go create something AMAZING! :D
--->
+# Prediction of Feed Stream Yields in a Gas Processing Plant
 
-
-
-<!-- PROJECT SHIELDS -->
-<!--
-* I'm using markdown "reference style" links for readability.
-* Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-* See the bottom of this document for the declaration of the reference variables
-* for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-* https://www.markdownguide.org/basic-syntax/#reference-style-links
--->
-
-
-<!-- PROJECT LOGO -->
-<br />
-<h3 align="center">Prediction of Feed Stream Yields in a Gas Processing Plant</h3>
-
-  <p align="center">
-    This code contains all the functions used during the period of the research to get the yields of Gas Processing Plant only by using the input feeds data
-    <br />
-    <a href="https://github.com/github_username/repo_name"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    <a href="https://github.com/github_username/repo_name/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
-    ·
-    <a href="https://github.com/github_username/repo_name/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
-  </p>
-</div>
-
-
-
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-  </ol>
-</details>
-
-
-
-<!-- ABOUT THE PROJECT -->
-## About The Project
+## Overview
 ![Product Name Screen Shot][product-screenshot]
 
-Process optimization and risk aversion are of utmost importance to any oil-producing country's energy sector. One of the main ways engineers analyze the gas composition is by using advanced meters and gas chromatography. However, many countries have old pipeline structures and gas networks that prohibit the process. Finding the linear relationships using different regression models and neural networks allows for better optimization. The yields obtained from the neural networks gave better results than the yields calculated in the lab.
+This project aims to address challenges in gas processing plants related to unmetered pipelines and unreliable data by predicting feed stream yields using advanced machine learning techniques. The project compares multiple regression methods and neural networks to optimize yield prediction and improve production planning.
 
-This repository contains all the functions, scripts, and experiments utilized to generate the results presented in the report and to derive meaningful conclusions. It serves as a comprehensive collection of the tools and methodologies used throughout the research process.
+Code Repository: [gas-yield-prediction](https://github.com/ColderBeholder/gas-yield-prediction)
 
+---
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+## Objectives
+- Predict feed stream yields in gas processing plants.
+- Improve accuracy over traditional methods used in the gas industry.
+- Address challenges in noisy and inconsistent datasets using machine learning.
 
+---
 
+## Key Features
+- **Model Development**: Implemented and compared regression models and neural networks.
+- **Data Preprocessing**: Employed the Local Outlier Factor (LOF) algorithm for outlier detection and cleaning.
+- **Evaluation Metrics**: Utilized metrics such as R², MSE, RMSE, MAE, and CMAPE to assess model performance.
+- **Real-World Application**: Optimized production planning for gas plants with unmetered pipelines.
 
-### Built With
+---
 
-* [![Numpy][Numpy.js]][Numpy-url]
-* [![Pandas][Pandas.js]][Pandas-url]
-* [![Matplotlib][Matplotlib.js]][Matplotlib-url]
-* [![PlotLy][PlotLy.js]][PlotLy-url]
-* [![Pytorch][Pytorch.js]][Pytorch-url]
-* [![scikit-learn][scikit-learn.js]][scikit-learn-url]
-* [![Seaborn][Seaborn.js]][Seaborn-url]
-* [![Statsmodels][Statsmodels.js]][Statsmodels-url]
+## Methodology
+1. **Data Exploration**: Initial exploration using statistical analysis and visualization to identify relationships between inputs and outputs.
+2. **Outlier Detection**: Applied LOF to handle noisy data and improve model accuracy.
+3. **Modeling**: 
+   - Linear regression for baseline results.
+   - Decision trees, random forests, and support vector regressors for non-linear relationships.
+   - Neural networks with initialized weights from linear regression for enhanced convergence.
+4. **Evaluation**: Cross-validation and testing against unseen data to ensure model generalization.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+---
 
+## Results
+- Linear regression models demonstrated limited accuracy due to the imposed linearity.
+- Neural networks achieved superior performance with an R² score of 0.9890 and a CMAPE of 91.16%, significantly outperforming traditional methods.
+- The approach demonstrated robust prediction capabilities even with limited and noisy data.
 
+---
 
-<!-- GETTING STARTED -->
-## Getting Started
+## Experimental Setup
+- **Environment**: Python 3 with Jupyter Notebook.
+- **Libraries Used**: pandas, numpy, matplotlib, scikit-learn, TensorFlow.
+- **Dataset**: Daily input-output data from five gas processing plants, recorded from January 2021 to May 2024, with 1236 entries post-cleaning.
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
-  
+---
 
-### Installation and First Run
+## Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/ColderBeholder/gas-yield-prediction.git
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd gas-yield-prediction
+   ```
+3. Install the required dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-1. Clone the repo `git clone https://github.com/ColderBeholder/gas-yield-prediction.git`
-   
-2. Install Python packages from requirements.txt `pip install -r requirements.txt`
+---
 
-3. Run the main.ipynb file
-   
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- USAGE EXAMPLES -->
 ## Usage
 
 This code contains functions\experiments for the following:
-- visualising the data
-- statistics of the data
-- fitting machine learning models and evalute them (Linear Regresion, SVR, Random Forest, Decision Tree, Neural Networks)
+- To run your first experiment and obtain your first model, open main.ipynb and choose which plant to try to model (B, S, K, X, Y) and run the notebook. Then different experiments can be tested through tweaking the hyperparameters
+- Visualize the data in data_exploration.ipynb through both statistical and visual approaches
+- Go through previously run experiments in experiments.ipynb
+- Created models are stored in the directory saved_models/
+- Custom functions and model can be viewed in utils.py and model.py respectively.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+---
+
+## Dataset Description
+- **Inputs**: Feed volumes from plants (e.g., Feed B, Feed K, etc.).
+- **Outputs**: Product yields (e.g., C1, NGL, Sulphur, Condensate).
+- Data spans 2021–2024, with varying features and scales.
+
+---
+
+## Limitations
+- Limited dataset with only 1236 entries.
+- Missing key variables like temperature and flow rate.
+- Model performance might degrade when extrapolated to unseen conditions.
+
+---
+
+## Future Work
+- Enrich the dataset with additional features and real-time variables.
+- Explore advanced neural network architectures and hybrid models.
+- Incorporate time-series analysis for temporal trends.
+
+---
+
+## Contributors
+- **Ali Alhebsi**, **Omar Alawadhi**, **Rames Aljneibi**
+- Affiliation: Mohamed Bin Zayed University of Artificial Intelligence, Abu Dhabi, UAE
+
+
+---
+
+## Acknowledgments
+Special thanks to the gas company for providing data and domain expertise.
+
 
 [product-screenshot]: images/screenshot.jpeg
-
-[Numpy.js]: https://img.shields.io/badge/-Numpy-013243?&logo=NumPy
-[Numpy-url]: https://numpy.org/
-[Pandas.js]: https://img.shields.io/badge/-Pandas-333333?style=flat&logo=pandas
-[Pandas-url]: https://pandas.pydata.org/
-[Matplotlib.js]: https://img.shields.io/badge/-Matplotlib-000000?style=flat&logo=python
-[Matplotlib-url]: https://matplotlib.org/
-[PlotLy.js]: https://img.shields.io/badge/-Plotly-4E84C4?style=flat&logo=plotly&logoColor=white
-[PlotLy-url]: https://plotly.com/
-[Pytorch.js]: https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white
-[Pytorch-url]: https://pytorch.org/
-[scikit-learn.js]: https://img.shields.io/badge/scikit%20learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white
-[scikit-learn-url]: https://scikit-learn.org/dev/index.html
-[Seaborn.js]: images/seaborn.jpg
-[Seaborn-url]: https://seaborn.pydata.org/
-[Statsmodels.js]: images/Statsmodel.jpg
-[Statsmodels-url]: https://www.statsmodels.org/stable/index.html

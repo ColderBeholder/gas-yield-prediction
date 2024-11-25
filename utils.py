@@ -12,8 +12,6 @@ from sklearn.svm import SVR
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 import torch
-import torch.nn as nn
-import torch.optim as optim
 from model import FeedForwardNN
 
 
@@ -86,8 +84,8 @@ def plot_2d(df, xyz):
     plt.colorbar(scatter, label=xyz[2])
     title = "Plot with " + xyz[2] + " as color"
 
-    plt.xlabel(x)
-    plt.ylabel(y)
+    plt.xlabel(xyz[0])
+    plt.ylabel(xyz[1])
     plt.title(title)
     plt.show()
 
@@ -125,9 +123,9 @@ def parameter_extractor(LinearModel, outputs):
 
 # utility function 5: train and test different models into desired inputs and outputs
 
-def evaluate_models(df, targets, features):
-    X = df[features]
-    y = df[targets]
+def evaluate_models(df, rows, cols):
+    X = df[cols]
+    y = df[rows]
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=7)
 
@@ -169,7 +167,7 @@ def evaluate_models(df, targets, features):
     # Convert results to DataFrame
     results_df = pd.DataFrame(results).T
     print('===================== Results =====================')
-    print("output Streams =", ', '.join(targets))
+    print("output Streams =", ', '.join(rows))
     print(results_df,'\n')
     return trained_models, results
 
@@ -196,7 +194,7 @@ def prepare_data(df, input_cols, output_cols, test_size=0.2, random_state=7):
     return map(torch.tensor, (X_train, X_test, y_train, y_test))
 
 #function to create NN model of FFNN
-def makeNN(input, output,hidden_sizes, df, coefficients=pd.DataFrame([]), biases=pd.DataFrame([]), lr=0.001):
+def makeNN(input, hidden_sizes, output, df, coefficients=pd.DataFrame([]), biases=pd.DataFrame([]), lr=0.001):
     model = FeedForwardNN(input, hidden_sizes, output, df, coefficients, biases, lr)
     
     if not ((coefficients.empty) and (biases.empty)):
@@ -207,24 +205,24 @@ def makeNN(input, output,hidden_sizes, df, coefficients=pd.DataFrame([]), biases
             # Initialize weights and biases of the first layer only
             first_layer.weight.copy_(torch.tensor(coefficients.values, dtype=torch.float32))
             first_layer.bias.copy_(torch.tensor(biases.values, dtype=torch.float32))
-    
-    criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    return model, criterion, optimizer 
+    return model
     
 
-def trainKfolds(model,criterion, optimizer, n_splits=5, shuffle=True, random_state=7, epochs=1000, freq = 0.1, printOut =1):
+def trainKfolds(model, criterion, optimizer, n_splits=5, shuffle=True, random_state=7, epochs=1000, freq = 0.1, printOut =1):
     kf = KFold(n_splits=n_splits, shuffle=shuffle, random_state=random_state)
+
     
     X, y = prepare_data_kf(model.df, model.input, model.output)
+    opt = optimizer
     fold_results = []
 
     models = []
     all_train_losses = []
     all_val_losses = []
     for fold, (train_index, val_index) in enumerate(kf.split(X)):
-        model, criterion, optimizer = makeNN(model.input, model.output, model.hidden_sizes, model.df, coefficients=model.coefficients, biases=model.biases, lr=model.lr)
+        model = makeNN(model.input, model.hidden_sizes, model.output, model.df, model.coefficients, model.biases, model.lr)
+        optimizer = opt(model.parameters(), model.lr)
         print(f'\nFold {fold + 1}/{n_splits}')
 
         #split data
@@ -319,7 +317,7 @@ def ensemble_predict(models, X):
 
     return np.mean(predictions, axis=0)
 
-def feedsYield (nnModel, cols, rows, multipleModels = 0, constExp = [0,1000,2], feedRangeBounds = [0,2000]):
+def feedsYield (nnModel, cols, rows, multipleModels = 1, constExp = [0,1000,2], feedRangeBounds = [0,2000]):
     start, end, step = constExp
     feedL, feedR = feedRangeBounds
     var_col = np.arange(feedL,feedR,(feedR-feedL)/((end-start)/step))
@@ -328,15 +326,14 @@ def feedsYield (nnModel, cols, rows, multipleModels = 0, constExp = [0,1000,2], 
     yield_std = np.full(len(cols), -1)
 
     
-    for r in np.arange(0,len(rows)):
+    for r in np.arange(len(rows)):
         all_feeds_yield = np.array([])
         all_feeds_yield_std = np.array([])
 
-        for i in np.arange(0,len(cols)):
+        for i in np.arange(len(cols)):
             single_feed_yields_list = np.array([])
 
             for j in np.arange(start,end,step):
-                temp = []
                 const_col = np.full((int)((end-start)/step), j)
 
                 temp = np.column_stack([const_col] * len(cols))
@@ -363,4 +360,10 @@ def feedsYield (nnModel, cols, rows, multipleModels = 0, constExp = [0,1000,2], 
     yield_results = pd.DataFrame(yield_results[1:,:], columns=cols, index=rows)
     yield_std = pd.DataFrame(yield_std[1:,:], columns=cols, index=rows)
 
-    return yield_results, yield_std
+    return yield_results.T, yield_std.T
+
+def train_formation(feeds, prods, function, arg, all=True):
+    if all:
+        return function(arg, cols=feeds, rows=prods)
+    
+    return [function(arg, cols=feeds, rows=[prod]) for prod in prods]
