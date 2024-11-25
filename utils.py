@@ -78,22 +78,16 @@ def make_graph(df, outputs, inputs):
 def plot_2d(df, xyz):
     x = df[xyz[0]]
     y = df[xyz[1]]
-    z = df[xyz[2]] if xyz[2] else xyz[2]
+    z = df[xyz[2]]
     
     plt.figure()
 
     scatter = plt.scatter(x, y, c=z, cmap='viridis')
+    plt.colorbar(scatter, label=xyz[2])
+    title = "Plot with " + xyz[2] + " as color"
 
-    if xyz[2]:
-        scatter = plt.scatter(x, y, c=z, cmap='viridis')
-        plt.colorbar(scatter, label=xyz[2])
-        title = "2D Scatter Plot with " + xyz[2] + " as color (Third Dimension)"
-    else:
-        title = "2D Scatter Plot of " + xyz[1] + " vs " + xyz[0]
-        scatter = plt.scatter(x, y)
-
-    plt.xlabel(xyz[0])
-    plt.ylabel(xyz[1])
+    plt.xlabel(x)
+    plt.ylabel(y)
     plt.title(title)
     plt.show()
 
@@ -161,7 +155,7 @@ def evaluate_models(df, targets, features):
         mse = mean_squared_error(y_test, y_pred, multioutput=multioutput)
         rmse = np.sqrt(mse)
         mae = mean_absolute_error(y_test, y_pred, multioutput=multioutput)
-        MAP = 1 - np.mean(np.abs((y_test - y_pred) / y_test))
+        cmape = 1 - np.mean(np.abs((y_test - y_pred) / y_test))
 
         # Store results
         results[model_name] = {
@@ -169,13 +163,13 @@ def evaluate_models(df, targets, features):
             'MSE': mse,
             'RMSE': rmse,
             'MAE': mae,
-            'MAP': MAP,
+            'CMAPE': cmape,
         }
         trained_models[model_name] = model
     # Convert results to DataFrame
     results_df = pd.DataFrame(results).T
-    print('===================== Results for =====================')
-    print(targets)
+    print('===================== Results =====================')
+    print("output Streams =", ', '.join(targets))
     print(results_df,'\n')
     return trained_models, results
 
@@ -198,14 +192,8 @@ def prepare_data(df, input_cols, output_cols, test_size=0.2, random_state=7):
     X, y = prepare_data_kf(df, input_cols, output_cols)
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
-
-    # Convert to tensors
-    X_train = torch.tensor(X_train)
-    y_train = torch.tensor(y_train)
-    X_test = torch.tensor(X_test)
-    y_test = torch.tensor(y_test)
     
-    return X_train, X_test, y_train, y_test
+    return map(torch.tensor, (X_train, X_test, y_train, y_test))
 
 #function to create NN model of FFNN
 def makeNN(input, output,hidden_sizes, df, coefficients=pd.DataFrame([]), biases=pd.DataFrame([]), lr=0.001):
@@ -256,15 +244,15 @@ def trainKfolds(model,criterion, optimizer, n_splits=5, shuffle=True, random_sta
         with torch.no_grad():
             val_outputs = model(X_val).squeeze()
             val_loss = criterion(val_outputs, y_val).item()
-            mape = accuracy_nn(val_outputs, y_val)
+            cmape = accuracy_nn(val_outputs, y_val)
             r2 = r2_score_nn(val_outputs, y_val)
 
-        print(f'Fold {fold + 1} Validation Loss: {val_loss:.4f}, MAPE: {mape.item():.2f}%, R²: {r2.item():.4f}')
+        print(f'Fold {fold + 1} Validation Loss: {val_loss:.4f}, CMAPE: {cmape.item():.2f}%, R²: {r2.item():.4f}')
 
         fold_results.append({
             'fold': fold + 1,
             'val_loss': val_loss,
-            'MAPE': mape.item(),
+            'CMAPE': cmape.item(),
             'R²': r2.item()
         })
     
@@ -273,15 +261,15 @@ def trainKfolds(model,criterion, optimizer, n_splits=5, shuffle=True, random_sta
 
     # Compute average metrics
     avg_val_loss = np.mean([res['val_loss'] for res in fold_results])
-    avg_mape = np.mean([res['MAPE'] for res in fold_results])
+    avg_cmape = np.mean([res['CMAPE'] for res in fold_results])
     avg_r2 = np.mean([res['R²'] for res in fold_results])
 
-    print(f'\nAverage Validation Loss: {avg_val_loss:.4f}, Average MAPE: {avg_mape:.2f}%, Average R²: {avg_r2:.4f}')
+    print(f'\nAverage Validation Loss: {avg_val_loss:.4f}, Average CMAPE: {avg_cmape:.2f}%, Average R²: {avg_r2:.4f}')
     return models, fold_results, avg_train_losses, avg_val_losses
 
 
 # function to train nn model
-def train(model,criterion, optimizer, X_train, y_train, X_val, y_val, epochs=1000, freq = 0.01, printOut =1):
+def train(model, criterion, optimizer, X_train, y_train, X_val, y_val, epochs=1000, freq=0.01, printOut=1):
     train_loss_values = []
     val_loss_values = []
     
@@ -308,13 +296,12 @@ def train(model,criterion, optimizer, X_train, y_train, X_val, y_val, epochs=100
             val_loss_values.append(val_loss_nn.item())
 
             # Print loss (epochs*freq) times
-            if (epoch + 1) % int(epochs * freq) == 0:
-                mape_nn = accuracy_nn(val_outputs, y_val)
+            if (epoch + 1) % int(epochs * freq) == 0 and printOut:
+                cmape_nn = accuracy_nn(val_outputs, y_val)
                 r2_nn = r2_score_nn(val_outputs, y_val)
-                if printOut:
-                    print(f'Epoch [{epoch+1}/{epochs}], Training Loss: {train_loss_nn.item():.4f}, '
-                          f'Validation Loss: {val_loss_nn.item():.4f}, MAPE: {mape_nn.item():.2f}%, '
-                          f'R²: {r2_nn.item():.4f}')
+                print(f'Epoch [{epoch+1}/{epochs}], Training Loss: {train_loss_nn.item():.4f}, '
+                    f'Validation Loss: {val_loss_nn.item():.4f}, CMAPE: {cmape_nn.item():.2f}%, '
+                    f'R²: {r2_nn.item():.4f}')
 
 
     return train_loss_values, val_loss_values
@@ -328,12 +315,7 @@ def predict(model, X):
     return predictions.numpy()
 
 def ensemble_predict(models, X):
-    predictions = []
-    for model in models:
-        model.eval()
-        with torch.no_grad():
-            pred = model(X).numpy()
-            predictions.append(pred)
+    predictions = [predict(model, X) for model in models]
 
     return np.mean(predictions, axis=0)
 
@@ -347,7 +329,6 @@ def feedsYield (nnModel, cols, rows, multipleModels = 0, constExp = [0,1000,2], 
 
     
     for r in np.arange(0,len(rows)):
-        
         all_feeds_yield = np.array([])
         all_feeds_yield_std = np.array([])
 
@@ -378,11 +359,8 @@ def feedsYield (nnModel, cols, rows, multipleModels = 0, constExp = [0,1000,2], 
 
         yield_results = np.vstack((yield_results, all_feeds_yield))
         yield_std = np.vstack((yield_std, all_feeds_yield_std))
-        
-    yield_results = yield_results[1:,:]
-    yield_std = yield_std[1:,:]
 
-    yield_results = pd.DataFrame(yield_results, columns=cols, index=rows)
-    yield_std = pd.DataFrame(yield_std, columns=cols, index=rows)
+    yield_results = pd.DataFrame(yield_results[1:,:], columns=cols, index=rows)
+    yield_std = pd.DataFrame(yield_std[1:,:], columns=cols, index=rows)
 
     return yield_results, yield_std
